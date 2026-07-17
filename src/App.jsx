@@ -1,121 +1,85 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
+import { generateContent } from './gemini'
+
+const MODES = [
+  { id: 'rewrite', label: 'Rewrite Bullet Points' },
+  { id: 'tone', label: 'Tailor Tone' },
+  { id: 'improve', label: 'Suggest Improvements' },
+]
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [inputText, setInputText] = useState('')
+  const [selectedMode, setSelectedMode] = useState('rewrite')
+  const [outputText, setOutputText] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorText, setErrorText] = useState('')
+
+  const handleGenerate = async () => {
+    setIsLoading(true)
+    setOutputText('')
+    setErrorText('')
+
+    try {
+      const result = await generateContent(selectedMode, inputText)
+      setOutputText(result)
+    } catch (error) {
+      setErrorText('Something went wrong while generating. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <h1>Resume & Portfolio Content Assistant</h1>
 
-      <div className="ticks"></div>
+      <div className="mode-selector">
+        {MODES.map((mode) => (
+          <button
+            key={mode.id}
+            className={selectedMode === mode.id ? 'mode-button active' : 'mode-button'}
+            onClick={() => setSelectedMode(mode.id)}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <div className="panels">
+        <div className="panel">
+          <label htmlFor="input-text">Paste your resume or project description</label>
+          <textarea
+            id="input-text"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder="Paste text here..."
+            rows={14}
+          />
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <div className="panel">
+          <label htmlFor="output-text">Result</label>
+          <textarea
+            id="output-text"
+            value={outputText}
+            readOnly
+            placeholder="Output will appear here..."
+            rows={14}
+          />
+        </div>
+      </div>
+
+      <button
+        className="generate-button"
+        onClick={handleGenerate}
+        disabled={!inputText.trim() || isLoading}
+      >
+        {isLoading ? 'Generating...' : 'Generate'}
+      </button>
+
+      {errorText && <p className="error-text">{errorText}</p>}
+    </div>
   )
 }
 
